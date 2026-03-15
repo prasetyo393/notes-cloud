@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Notes Cloud</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+body{
+font-family:Arial;
+background:#eef2f3;
+text-align:center;
+}
+
+.container{
+width:90%;
+max-width:500px;
+margin:auto;
+}
+
+textarea{
+width:100%;
+height:120px;
+padding:10px;
+margin-top:10px;
+border-radius:8px;
+border:1px solid #ccc;
+}
+
+button{
+padding:10px 15px;
+border:none;
+border-radius:6px;
+background:#007bff;
+color:white;
+cursor:pointer;
+margin-top:10px;
+}
+
+.note{
+background:white;
+padding:15px;
+margin-top:15px;
+border-radius:10px;
+box-shadow:0 2px 5px rgba(0,0,0,0.1);
+}
+
+.actions button{
+margin:5px;
+background:#28a745;
+}
+
+.delete{
+background:#dc3545 !important;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>☁ Notes Cloud</h2>
+
+<textarea id="noteInput" placeholder="Tulis catatan..."></textarea>
+
+<button onclick="addNote()">Simpan</button>
+
+<div id="notes"></div>
+
+</div>
+
+<script>
+
+const supabase = window.supabase.createClient(
+"https://supabase.com/dashboard/project/fysyzkrmleyorznacavg/settings/api-keys",
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5c3l6a3JtbGV5b3J6bmFjYXZnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1NDk0ODAsImV4cCI6MjA4OTEyNTQ4MH0.rrz797iX9Yqt27xkbsPOR_VKCVzLucv1rZvROwsH3IQ"
+)
+
+async function addNote(){
+
+let text=document.getElementById("noteInput").value
+
+if(text=="") return alert("Tulis dulu catatannya")
+
+await supabase.from("notes").insert([{text:text}])
+
+document.getElementById("noteInput").value=""
+
+loadNotes()
+
+}
+
+async function loadNotes(){
+
+let {data}=await supabase
+.from("notes")
+.select("*")
+.order("id",{ascending:false})
+
+let html=""
+
+data.forEach(n=>{
+
+html+=`
+<div class="note">
+<p>${n.text}</p>
+
+<div class="actions">
+<button onclick="editNote(${n.id},'${n.text}')">Edit</button>
+<button class="delete" onclick="deleteNote(${n.id})">Hapus</button>
+</div>
+
+</div>
+`
+
+})
+
+document.getElementById("notes").innerHTML=html
+
+}
+
+async function deleteNote(id){
+
+await supabase.from("notes").delete().eq("id",id)
+
+loadNotes()
+
+}
+
+async function editNote(id,text){
+
+let newText=prompt("Edit catatan:",text)
+
+if(newText==null) return
+
+await supabase.from("notes").update({text:newText}).eq("id",id)
+
+loadNotes()
+
+}
+
+loadNotes()
+
+</script>
+
+</body>
+</html>
